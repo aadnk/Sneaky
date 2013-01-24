@@ -47,20 +47,18 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 	private AutoSneakers sneakers;
 	private SneakListener listener;
 
+	// Configuration
+	private TypedConfiguration config;
+	
 	// Reference to PL
 	private ProtocolManager manager;
 	
 	public void onEnable() {
-		// Register the sneaking class
+		// Load configuration
 		ConfigurationSerialization.registerClass(AutoSneakers.class);
-		
-		sneakers = (AutoSneakers) getConfig().get("list");
-		
-		// Initialize a new list if needed
-		if (sneakers == null) {
-			sneakers = new AutoSneakers();
-		}
-		
+		config = new TypedConfiguration(getConfig());
+		sneakers = config.getSneakers();
+
 		manager = ProtocolLibrary.getProtocolManager();
 		listener = new SneakListener(this, sneakers);
 		
@@ -68,10 +66,10 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 		getServer().getPluginManager().registerEvents(this, this);
 		manager.addPacketListener(listener);
 	}
-	
+
 	public void onDisable() {
 		// Save the list of sneakers
-		getConfig().set("list", sneakers);
+		config.setSneakers(sneakers);
 		saveConfig();
 	}
 	
@@ -87,7 +85,7 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 	public void onPlayerJoin(PlayerJoinEvent event) {
 		// Inform a player about the automatic sneaking
 		if (sneakers.isAutoSneaking(event.getPlayer())) {
-			event.getPlayer().sendMessage(ChatColor.GOLD + "Automatic sneaking is enabled.");
+			event.getPlayer().sendMessage(ChatColor.GOLD + config.getFormattedMessage(true, event.getPlayer().getName()));
 		}
 	}
 	
@@ -154,8 +152,8 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 		boolean status = sneakers.toggleAutoSneaking(target);
 		boolean update = target.isSneaking() == status;
 		
-		String message = ChatColor.GOLD + (status ? "Enabled" : "Disabled") + 
-							" automatic sneaking for " + target.getName();
+		// Get the message to transmit
+		String message = config.getFormattedMessage(status, target.getName());
 		
 		target.setSneaking(status);
 		

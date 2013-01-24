@@ -15,7 +15,7 @@ import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.wrappers.WrappedDataWatcher;
 import com.comphenix.sneaky.packets.Packet28EntityMetadata;
 
-public class SneakListener extends PacketAdapter {
+class SneakListener extends PacketAdapter {
 	private static final int ENTITY_CROUCHED = 0x02;
 	
 	private AutoSneakers autoSneakers;
