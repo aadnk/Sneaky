@@ -1,0 +1,11 @@
+name: Sneaky
+main: com.comphenix.sneaky.SneakyPlugin
+version: 1.0.0
+description: A simple plugin that allows players to toggle automatic sneaking.
+
+depend: [ProtocolLib]
+
+commands:
+   sneak:
+      description: Toggle the automatic sneaking of a given player.
+      usage: /<command> [player]
