@@ -1,5 +1,3 @@
 messages:
   enabled_sneaking: Enabled automatic sneaking for %s
   disabled_sneaking: Disabled automatic sneaking for %s
-  
-list:

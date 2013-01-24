@@ -25,6 +25,14 @@ public class TypedConfiguration {
 		this.config = config;
 	}
 	
+	/**
+	 * Determine if the configuration has been created.
+	 * @return TRUE if it has, FALSE otherwise.
+	 */
+	public boolean isCreated() {
+		return config.getConfigurationSection(SECTION_LIST) != null;
+	}
+	
 	public AutoSneakers getSneakers() {
 		AutoSneakers sneakers = (AutoSneakers) config.get(SECTION_LIST);
 		

@@ -57,6 +57,16 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 		// Load configuration
 		ConfigurationSerialization.registerClass(AutoSneakers.class);
 		config = new TypedConfiguration(getConfig());
+		
+		if (!config.isCreated()) {
+			getConfig().options().copyDefaults(true);
+			saveConfig();
+			
+			// Load it again
+			config = new TypedConfiguration(getConfig());
+			getLogger().info("Creating default configuration.");
+		}
+		
 		sneakers = config.getSneakers();
 
 		manager = ProtocolLibrary.getProtocolManager();
@@ -153,7 +163,7 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 		boolean update = target.isSneaking() == status;
 		
 		// Get the message to transmit
-		String message = config.getFormattedMessage(status, target.getName());
+		String message = ChatColor.GOLD + config.getFormattedMessage(status, target.getName());
 		
 		target.setSneaking(status);
 		
