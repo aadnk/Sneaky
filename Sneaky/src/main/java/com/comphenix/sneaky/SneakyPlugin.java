@@ -27,7 +27,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -39,6 +38,10 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 	 * Represents the main name of this command.
 	 */
 	public static final String NAME = "sneak";
+	
+	// Permissions
+	public static final String PERMISSION_SELF = "sneaky.sneak.self";
+	public static final String PERMISSION_OTHER = "sneaky.sneak.other";
 	
 	// List of people sneaking
 	private AutoSneakers sneakers;
@@ -130,6 +133,23 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 			return "This command can only take one parameter.";
 		}
 		
+		// Verify permissions
+		if (sender.hasPermission(sender == target ? PERMISSION_SELF : PERMISSION_OTHER)) {
+			return "Insufficient permission to toggle sneaking.";
+		}
+		
+		try {
+			toggleSneaking(sender, target);
+		} catch (InvocationTargetException e) {
+			e.printStackTrace();
+			return "Unable to update nearby players.";
+		}
+		
+		// No error
+		return null;
+	}
+	
+	public void toggleSneaking(CommandSender sender, Player target) throws InvocationTargetException {
 		// Toggle sneaking
 		boolean status = sneakers.toggleAutoSneaking(target);
 		boolean update = target.isSneaking() == status;
@@ -141,12 +161,7 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 		
 		// We may need to refresh the player
 		if (update) {
-			try {
-				listener.updatePlayer(manager, target);
-			} catch (InvocationTargetException e) {
-				e.printStackTrace();
-				return "Unable to update nearby players.";
-			}
+			listener.updatePlayer(manager, target);
 		}
 		
 		if (target == sender) {
@@ -155,8 +170,5 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 			sender.sendMessage(message);
 			target.sendMessage(message);
 		}
-		
-		// No error
-		return null;
 	}
 }

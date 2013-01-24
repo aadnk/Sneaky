@@ -5,6 +5,22 @@ description: A simple plugin that allows players to toggle automatic sneaking.
 
 depend: [ProtocolLib]
 
+permissions:
+  sneaky.*:
+    description: Gives access to everything.
+    children:
+      sneaky.sneak.self
+      sneaky.sneak.other
+   sneaky.sneak.*:
+    description: Gives full access to the toggle command.
+    children:
+      sneaky.sneak.self
+      sneaky.sneak.other
+   sneaky.sneak.self:
+    description: Toggle automatic sneaking of your own player.
+   sneaky.sneak.other:
+    description: Toggle automatic sneaking of other players.
+    
 commands:
    sneak:
       description: Toggle the automatic sneaking of a given player.
