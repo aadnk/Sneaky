@@ -132,7 +132,7 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 		}
 		
 		// Verify permissions
-		if (sender.hasPermission(sender == target ? PERMISSION_SELF : PERMISSION_OTHER)) {
+		if (!sender.hasPermission(sender == target ? PERMISSION_SELF : PERMISSION_OTHER)) {
 			return "Insufficient permission to toggle sneaking.";
 		}
 		
