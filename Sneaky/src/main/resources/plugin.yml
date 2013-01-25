@@ -34,5 +34,5 @@ commands:
    sneak:
       description: Toggle the automatic sneaking of a given player.
       permission: sneaky.sneak.self
-      usage: /<command> [player]
+      usage: /<command> [player] [on|off]
       

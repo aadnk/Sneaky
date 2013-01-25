@@ -233,15 +233,16 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 	 */
 	private String processSneak(CommandSender sender, String[] args) {
 		Player target = null;
+		int paramCount = args.length;
 		
 		// Parse parameter
-		if (args.length == 0) {
+		if (paramCount == 0) {
 			if (sender instanceof Player)
 				target = (Player) sender;
 			else
 				return "The player parameter is only optional when executed by a player.";
 			
-		} else if (args.length == 1) {
+		} else if (paramCount == 1 || paramCount == 2) {
 			target = getServer().getPlayer(args[0]);
 			
 			if (target == null) {
@@ -249,11 +250,26 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 			}
 			
 		} else {
-			return "This command can only take one parameter.";
+			return "This command can only take one or two parameters.";
 		}
 		
 		// Whether or not this player is currently automatically sneaking
 		boolean sneaking = sneakers.isAutoSneaking(target);
+		
+		// Check if we shouldn't toggle
+		if (paramCount == 2) {
+			try {
+				// Don't toggle if we are in a valid state
+				if (parseBoolean(args[1]) == sneaking) {
+					sender.sendMessage("Sneaking is already " + args[1]);
+					return null;
+				}
+				
+			} catch (IllegalArgumentException e) {
+				// Not a valid boolean
+				return e.getMessage();
+			}
+		}
 		
 		// Handle cooldown to enable automatic sneaking
 		if (!sneaking && !sender.hasPermission(PERMISSION_EXEMPT)) {
@@ -289,6 +305,18 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 		
 		// No error
 		return null;
+	}
+	
+	private boolean parseBoolean(String text) {
+		String value = text.toLowerCase().trim();
+		
+		// Simple enough
+		if (value.equals("no") || value.equals("off") || value.equals("false") || value.equals("0"))
+			return false;
+		else if (value.equals("yes") || value.equals("on") || value.equals("true") || value.equals("1"))
+			return true;
+		else
+			throw new IllegalArgumentException(text + " is not a valid boolean.");
 	}
 	
 	/**
