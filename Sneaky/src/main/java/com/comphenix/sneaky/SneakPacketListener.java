@@ -80,7 +80,6 @@ class SneakPacketListener extends PacketAdapter {
 	public void onPacketSending(PacketEvent event) {
 		// This modification shall only apply to certain users
 		if (event.getPlayer().hasPermission(PERMISSION_HIDE_AUTO)) {
-			System.out.println("Hiding for " + event.getPlayer());
 			return;
 		}
 		
