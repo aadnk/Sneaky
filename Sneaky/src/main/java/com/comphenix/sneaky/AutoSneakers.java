@@ -15,7 +15,12 @@ import com.comphenix.sneaky.cooldown.CooldownChangedEvent;
 import com.comphenix.sneaky.cooldown.CooldownListener;
 import com.comphenix.sneaky.cooldown.CooldownListenerSource;
 
-class AutoSneakers implements ConfigurationSerializable, CooldownListenerSource {
+/**
+ * Represents a list of sneakers and every player's cooldown.
+ * 
+ * @author Kristian
+ */
+public class AutoSneakers implements ConfigurationSerializable, CooldownListenerSource {
 	// Where the list of sneaking players is stored
 	private static final String SNEAKERS_KEY = "sneakers";
 	private static final String COOLDOWN_KEY = "cooldowns";
