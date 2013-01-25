@@ -4,6 +4,7 @@ version: 1.0.0
 description: A simple plugin that allows players to toggle automatic sneaking.
 
 depend: [ProtocolLib]
+softdepend: [Vault]
 
 permissions:
   sneaky.*:

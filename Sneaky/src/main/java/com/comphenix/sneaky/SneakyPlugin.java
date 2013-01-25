@@ -22,6 +22,8 @@ import java.lang.reflect.InvocationTargetException;
 
 import javax.annotation.Nonnull;
 
+import net.milkbowl.vault.chat.Chat;
+
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -30,6 +32,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.comphenix.protocol.ProtocolLibrary;
@@ -51,6 +54,10 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 	public static final String PERMISSION_OTHER = "sneaky.sneak.other";
 	public static final String PERMISSION_EXEMPT = "sneaky.exempt";
 	
+	// Override default cooldowns
+	public static final String PLAYER_INFO_COOLDOWN = "sneaky_cooldown";
+	public static final String PLAYER_INFO_DURATION = "sneaky_duration";
+	
 	// List of people sneaking
 	private AutoSneakers sneakers;
 	private CooldownManager cooldownManager;
@@ -64,6 +71,9 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 	
 	// Reference to PL
 	private ProtocolManager manager;
+	
+	// Vault (if enabled)
+	private Chat chat = null;
 	
 	// Metrics
 	private MetricsLite metrics;
@@ -80,6 +90,11 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 			// Load it again
 			config = new TypedConfiguration(getConfig());
 			getLogger().info("Creating default configuration.");
+		}
+		
+		// Add vault
+		if (setupChat()) {
+			getLogger().info("Detected Vault.");
 		}
 		
 		sneakers = config.getSneakers();
@@ -150,6 +165,24 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 		cooldownManager.addCooldownListener(cooldownListener);
 	}
 
+	/**
+	 * Initialize refernece to Vault.
+	 * @return TRUE if Vault was detected and loaded, FALSE otherwise.
+	 */
+    private boolean setupChat() {
+    	try {
+	        RegisteredServiceProvider<Chat> chatProvider = getServer().getServicesManager().getRegistration(Chat.class);
+	        
+	        if (chatProvider != null) {
+	            chat = chatProvider.getProvider();
+	        }
+	        return (chat != null);
+    	} catch (NoClassDefFoundError e) {
+    		// Nope
+    		return false;
+    	}
+    }
+	
 	public void onDisable() {
 		// Save the list of sneakers
 		config.setSneakers(sneakers);
@@ -309,12 +342,25 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 		
 		// Toggle sneaking
 		boolean status = sneakers.toggleAutoSneaking(target);
-
+		double delta = -1;
+		
 		// We may need to refresh the player
 		listener.updatePlayer(manager, target);
 		
-		// Update cooldown
-		double delta = (status ? config.getDuration() : config.getCooldown()) * 1000.0;
+		// Look this up in Vault
+		if (chat != null) {
+			String key = (status ? PLAYER_INFO_DURATION : PLAYER_INFO_COOLDOWN);
+			delta = chat.getPlayerInfoDouble(target, key, -1);
+			
+			// Try the integer as well
+			if (delta < -0.5) {
+				delta = chat.getPlayerInfoInteger(target, key, -1);
+			}
+		}
+		// Use default if Vault failed
+		if (delta < -0.5) {
+			delta = (status ? config.getDuration() : config.getCooldown()) * 1000.0;
+		}
 		
 		// Save cooldown
 		if (delta > 0) {
