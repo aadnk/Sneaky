@@ -19,12 +19,16 @@ permissions:
       sneaky.sneak.other: true
   sneaky.sneak.self:
     description: Toggle automatic sneaking of your own player.
+    default: true
   sneaky.sneak.other:
     description: Toggle automatic sneaking of other players.
+    default: op
   sneaky.hide.autosneak:
     description: Whether or not to hide all automatic sneaking for this player.
+    default: false
   sneaky.exempt:
     description: If set, the player is not bound by any cooldown or duration limit.
+    default: op
 
 commands:
    sneak:
