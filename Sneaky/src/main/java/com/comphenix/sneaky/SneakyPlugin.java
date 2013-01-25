@@ -27,7 +27,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.comphenix.protocol.ProtocolLibrary;
@@ -42,10 +41,11 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 	// Permissions
 	public static final String PERMISSION_SELF = "sneaky.sneak.self";
 	public static final String PERMISSION_OTHER = "sneaky.sneak.other";
+	public static final String PERMISSION_EXEMPT = "sneaky.exempt";
 	
 	// List of people sneaking
 	private AutoSneakers sneakers;
-	private SneakListener listener;
+	private SneakPacketListener listener;
 
 	// Configuration
 	private TypedConfiguration config;
@@ -70,7 +70,7 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 		sneakers = config.getSneakers();
 
 		manager = ProtocolLibrary.getProtocolManager();
-		listener = new SneakListener(this, sneakers);
+		listener = new SneakPacketListener(this, sneakers);
 		
 		// Register listeners
 		getServer().getPluginManager().registerEvents(this, this);
@@ -81,14 +81,6 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 		// Save the list of sneakers
 		config.setSneakers(sneakers);
 		saveConfig();
-	}
-	
-	@EventHandler(ignoreCancelled = true)
-	public void onToggleSneaking(PlayerToggleSneakEvent event) {
-		// Automatic sneaking should not be cancelled
-		if (sneakers.isAutoSneaking(event.getPlayer())) {
-			event.setCancelled(true);
-		}
 	}
 
 	@EventHandler
@@ -141,6 +133,19 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 			return "This command can only take one parameter.";
 		}
 		
+		// Whether or not this player is currently automatically sneaking
+		boolean sneaking = sneakers.isAutoSneaking(target);
+		
+		// Handle cooldown to enabling automatic sneaking
+		if (sneaking && !sender.hasPermission(PERMISSION_EXEMPT)) {
+			Long cooldown = sneakers.getCooldown(target);
+			long current = System.currentTimeMillis();
+			
+			if (cooldown != null && cooldown > System.currentTimeMillis()) {
+				return config.getFormattedMessage((cooldown - current) / 1000.0);
+			}
+		}
+		
 		// Verify permissions
 		if (!sender.hasPermission(sender == target ? PERMISSION_SELF : PERMISSION_OTHER)) {
 			return "Insufficient permission to toggle sneaking.";
@@ -160,16 +165,22 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 	public void toggleSneaking(CommandSender sender, Player target) throws InvocationTargetException {
 		// Toggle sneaking
 		boolean status = sneakers.toggleAutoSneaking(target);
-		boolean update = target.isSneaking() == status;
-		
+
 		// Get the message to transmit
 		String message = ChatColor.GOLD + config.getFormattedMessage(status, target.getName());
-		
-		target.setSneaking(status);
-		
+
 		// We may need to refresh the player
-		if (update) {
-			listener.updatePlayer(manager, target);
+		listener.updatePlayer(manager, target);
+		
+		// Update cooldown
+		double delta = (status ? config.getDuration() : config.getCooldown()) * 1000.0;
+		
+		// Save cooldown
+		if (delta > 0) {
+			sneakers.setCooldown(target, System.currentTimeMillis() + (long)delta);
+		} else {
+			// Remove it
+			sneakers.setCooldown(target, null);
 		}
 		
 		if (target == sender) {
