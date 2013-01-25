@@ -42,7 +42,7 @@ public class TypedConfiguration {
 	 * @return TRUE if it has, FALSE otherwise.
 	 */
 	public boolean isCreated() {
-		return config.getConfigurationSection(SECTION_LIST) != null;
+		return config.getConfigurationSection(SECTION_MESSAGES) != null;
 	}
 	
 	public AutoSneakers getSneakers() {

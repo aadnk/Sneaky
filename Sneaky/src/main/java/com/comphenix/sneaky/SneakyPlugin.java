@@ -124,6 +124,9 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 					} else {
 						// Inform about this opportunity
 						player.sendMessage(config.getCooldownExpiredMessage());
+						
+						// Remove the cooldown completely
+						sneakers.setCooldown(player, null);
 					}
 				}
 			}
@@ -133,7 +136,7 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 				Player player = event.getPlayer();
 				
 				if (!player.hasPermission(PERMISSION_EXEMPT)) {
-					if (!sneakers.isAutoSneaking(player)) {
+					if (!sneakers.isAutoSneaking(player) && event.getToValue() != null) {
 						String message = getCooldownMessage(player);
 						
 						// Inform about the cooldown
