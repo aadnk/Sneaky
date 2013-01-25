@@ -19,12 +19,12 @@ Some features also require [Vault](http://dev.bukkit.org/server-mods/vault/).
 
 Features
 --------
-# Toggle persistant sneaking on and off by calling `/sneak`
-# Operators can toggle the sneaking of other players by calling `/sneak [player]`
-# Operators are (by default) not affected by the sneak effect.
-# Set the maximum duration a player can be sneaking in a single go, and a cooldown time
+* Toggle persistant sneaking on and off by calling `/sneak`
+* Operators can toggle the sneaking of other players by calling `/sneak [player]`
+* Operators are (by default) not affected by the sneak effect.
+* Set the maximum duration a player can be sneaking in a single go, and a cooldown time
   until the sneak command is available after a use.
-# Customize the duration and cooldown on a per player or per group basis. Requires Vault.
+* Customize the duration and cooldown on a per player or per group basis. Requires Vault.
 
 
 Commands
