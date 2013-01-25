@@ -17,6 +17,7 @@ package com.comphenix.sneaky;
  *  02111-1307 USA
  */
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
 import javax.annotation.Nonnull;
@@ -37,6 +38,7 @@ import com.comphenix.sneaky.cooldown.CooldownChangedEvent;
 import com.comphenix.sneaky.cooldown.CooldownExpiredEvent;
 import com.comphenix.sneaky.cooldown.CooldownListener;
 import com.comphenix.sneaky.cooldown.CooldownListenerSource;
+import com.comphenix.sneaky.metrics.MetricsLite;
 
 public class SneakyPlugin extends JavaPlugin implements Listener {
 	/**
@@ -62,6 +64,9 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 	
 	// Reference to PL
 	private ProtocolManager manager;
+	
+	// Metrics
+	private MetricsLite metrics;
 	
 	public void onEnable() {
 		// Load configuration
@@ -89,6 +94,15 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 		manager.addPacketListener(listener);
 		cooldownManager.registerBukkit(getServer());
 		getServer().getPluginManager().registerEvents(this, this);
+		
+		// Load metrics
+		try {
+			metrics = new MetricsLite(this);
+			metrics.start();
+		} catch (IOException e) {
+			// Damn it
+			e.printStackTrace();
+		}
 	}
 	
 	private void registerCooldownListener() {
