@@ -18,7 +18,8 @@ public class TypedConfiguration {
 	private static final String MESSAGE_ENABLED = "enabled_sneaking";
 	private static final String MESSAGE_DISABLED = "disabled_sneaking";
 	private static final String MESSAGE_COOLDOWN = "cooldown";
-
+	private static final String MESSAGE_COOLDOWN_EXPIRED = "cooldown_expired";
+	
 	private static final String COOLDOWN_KEY = "cooldown";
 	private static final String DURATION_KEY = "duration";
 	
@@ -26,6 +27,7 @@ public class TypedConfiguration {
 	private static final String DEFAULT_MESSAGE_ENABLED = "Enabled automatic sneaking for %s";
 	private static final String DEFAULT_MESSAGE_DISABLED = "Disabled automatic sneaking for %s";
 	private static final String DEFAULT_MESSAGE_COOLDOWN = "Sneaking is disabled for another %s seconds";
+	private static final String DEFAULT_MESSAGE_COOLDOWN_EXPIRED = "Automatic sneaking can now be activated.";
 	
 	// These are disabled by default
 	private static final double DEFAULT_COOLDOWN = 0;
@@ -79,6 +81,14 @@ public class TypedConfiguration {
 	
 	public void setCooldownMessageFormat(String value) {
 		getSectionOrDefault(SECTION_MESSAGES).set(MESSAGE_COOLDOWN, value);
+	}
+	
+	public String getCooldownExpiredMessage() {
+		return getSectionOrDefault(SECTION_MESSAGES).getString(MESSAGE_COOLDOWN_EXPIRED, DEFAULT_MESSAGE_COOLDOWN_EXPIRED);
+	}
+	
+	public void setCooldownExpiredMessage(String value) {
+		getSectionOrDefault(SECTION_MESSAGES).set(MESSAGE_COOLDOWN_EXPIRED, value);
 	}
 	
 	/**

@@ -4,13 +4,18 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.entity.Player;
 
-public class AutoSneakers implements ConfigurationSerializable {
+import com.comphenix.sneaky.cooldown.CooldownChangedEvent;
+import com.comphenix.sneaky.cooldown.CooldownListener;
+import com.comphenix.sneaky.cooldown.CooldownListenerSource;
+
+class AutoSneakers implements ConfigurationSerializable, CooldownListenerSource {
 	// Where the list of sneaking players is stored
 	private static final String SNEAKERS_KEY = "sneakers";
 	private static final String COOLDOWN_KEY = "cooldowns";
@@ -20,6 +25,9 @@ public class AutoSneakers implements ConfigurationSerializable {
 	
 	// Cooldown
 	private Map<String, Long> cooldowns;
+	
+	// Change listeners
+	private List<CooldownListener> listeners = new ArrayList<CooldownListener>();
 	
 	public AutoSneakers() {
 		// Initialize an empty set and map
@@ -79,10 +87,23 @@ public class AutoSneakers implements ConfigurationSerializable {
 	 * @see {@link AutoSneakers#getCooldown(Player)} for more details.
 	 */
 	public void setCooldown(Player player, Long time) {
+		Long old = null;
+		
 		if (time != null)
-			cooldowns.put(player.getName(), time);
+			old = cooldowns.put(player.getName(), time);
 		else
-			cooldowns.remove(player.getName());
+			old = cooldowns.remove(player.getName());
+		
+		// Inform about the change
+		onCooldownChange(player, old, time);
+	}
+	
+	private void onCooldownChange(Player player, Long from, Long to) {
+		CooldownChangedEvent event = new CooldownChangedEvent(this, player, from, to);
+		
+		for (CooldownListener listener : listeners) {
+			listener.cooldownChanged(event);
+		}
 	}
 	
 	/**
@@ -97,6 +118,16 @@ public class AutoSneakers implements ConfigurationSerializable {
 		return toggled;
 	}
 
+	@Override
+	public void addCooldownListener(CooldownListener listener) {
+		listeners.add(listener);
+	}
+
+	@Override
+	public void removeCooldownListener(CooldownListener listener) {
+		listeners.remove(listener);
+	}
+	
 	@SuppressWarnings("unchecked")
 	public static AutoSneakers deserialize(Map<String, Object> input) {
 		Object list = input.get(SNEAKERS_KEY);
@@ -111,7 +142,7 @@ public class AutoSneakers implements ConfigurationSerializable {
 				new HashMap<String, Long>((Map<String, Long>) map)
 		);
 	}
-
+	
 	private static void checkInput(Object value, Class<?> type) {
 		if (value == null)
 			throw new IllegalArgumentException("Cannot construct auto sneaker - missing " + type.getClass());

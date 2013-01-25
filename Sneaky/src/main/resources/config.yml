@@ -1,6 +1,7 @@
 messages:
   enabled_sneaking: Enabled automatic sneaking for %s
   disabled_sneaking: Disabled automatic sneaking for %s
+  cooldown_expired: Automatic sneaking can now be activated.
   cooldown: Sneaking is disabled for another %s seconds
 
 limits:

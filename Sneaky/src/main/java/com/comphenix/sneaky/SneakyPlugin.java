@@ -19,6 +19,8 @@ package com.comphenix.sneaky;
 
 import java.lang.reflect.InvocationTargetException;
 
+import javax.annotation.Nonnull;
+
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -31,6 +33,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
+import com.comphenix.sneaky.cooldown.CooldownChangedEvent;
+import com.comphenix.sneaky.cooldown.CooldownExpiredEvent;
+import com.comphenix.sneaky.cooldown.CooldownListener;
+import com.comphenix.sneaky.cooldown.CooldownListenerSource;
 
 public class SneakyPlugin extends JavaPlugin implements Listener {
 	/**
@@ -45,6 +51,10 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 	
 	// List of people sneaking
 	private AutoSneakers sneakers;
+	private CooldownManager cooldownManager;
+	private CooldownListener cooldownListener;
+	
+	// Minecraft packet handling
 	private SneakPacketListener listener;
 
 	// Configuration
@@ -68,19 +78,69 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 		}
 		
 		sneakers = config.getSneakers();
-
+		cooldownManager = new CooldownManager(this, sneakers);
+		registerCooldownListener();
+		
+		// Packet handling
 		manager = ProtocolLibrary.getProtocolManager();
 		listener = new SneakPacketListener(this, sneakers);
-		
+
 		// Register listeners
-		getServer().getPluginManager().registerEvents(this, this);
 		manager.addPacketListener(listener);
+		cooldownManager.registerBukkit(getServer());
+		getServer().getPluginManager().registerEvents(this, this);
+	}
+	
+	private void registerCooldownListener() {
+		cooldownListener = new CooldownListener() {
+			@Override
+			public void cooldownExpired(CooldownExpiredEvent event) {
+				Player player = event.getPlayer();
+				
+				// Skip player's that have no cooldown permission
+				if (!player.hasPermission(PERMISSION_EXEMPT)) {
+					if (sneakers.isAutoSneaking(player)) {
+						try {
+							toggleSneaking(player);
+							
+						} catch (InvocationTargetException e) {
+							// That would be bad
+							e.printStackTrace();
+						}
+					} else {
+						// Inform about this opportunity
+						player.sendMessage(config.getCooldownExpiredMessage());
+					}
+				}
+			}
+			
+			@Override
+			public void cooldownChanged(CooldownChangedEvent event) {
+				Player player = event.getPlayer();
+				
+				if (!player.hasPermission(PERMISSION_EXEMPT)) {
+					if (!sneakers.isAutoSneaking(player)) {
+						String message = getCooldownMessage(player);
+						
+						// Inform about the cooldown
+						if (message != null) {
+							player.sendMessage(ChatColor.RED + message);
+						}
+					}
+				}
+			}
+		};
+		cooldownManager.addCooldownListener(cooldownListener);
 	}
 
 	public void onDisable() {
 		// Save the list of sneakers
 		config.setSneakers(sneakers);
 		saveConfig();
+		
+		// Clean up
+		cooldownManager.close();
+		cooldownManager.removeCooldownListener(cooldownListener);
 	}
 
 	@EventHandler
@@ -136,13 +196,13 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 		// Whether or not this player is currently automatically sneaking
 		boolean sneaking = sneakers.isAutoSneaking(target);
 		
-		// Handle cooldown to enabling automatic sneaking
-		if (sneaking && !sender.hasPermission(PERMISSION_EXEMPT)) {
-			Long cooldown = sneakers.getCooldown(target);
-			long current = System.currentTimeMillis();
+		// Handle cooldown to enable automatic sneaking
+		if (!sneaking && !sender.hasPermission(PERMISSION_EXEMPT)) {
+			String message = getCooldownMessage(target);
 			
-			if (cooldown != null && cooldown > System.currentTimeMillis()) {
-				return config.getFormattedMessage((cooldown - current) / 1000.0);
+			// See if we in fact are under a cooldown
+			if (message != null) {
+				return message;
 			}
 		}
 		
@@ -152,7 +212,17 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 		}
 		
 		try {
-			toggleSneaking(sender, target);
+			boolean status = toggleSneaking(target);
+			String message = ChatColor.GOLD + config.getFormattedMessage(status, target.getName());
+			
+			// Notify player and sender
+			if (target == sender) {
+				sender.sendMessage(message);
+			} else {
+				sender.sendMessage(message);
+				target.sendMessage(message);
+			}
+			
 		} catch (InvocationTargetException e) {
 			e.printStackTrace();
 			return "Unable to update nearby players.";
@@ -162,12 +232,66 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 		return null;
 	}
 	
-	public void toggleSneaking(CommandSender sender, Player target) throws InvocationTargetException {
+	/**
+	 * Retrieve the cooldown message, or NULL if there is no cooldown.
+	 * @param player - the player to retrieve the message for.
+	 * @return The cooldown message.
+	 */
+	private String getCooldownMessage(Player player) {
+		Double cooldown = getCooldown(player);
+		
+		if (cooldown != null && cooldown > 0) {
+			return config.getFormattedMessage(cooldown);
+		} else {
+			return null;
+		}
+	}
+	
+	/**
+	 * Retrieve the object that reports when a cooldown changes or expires.
+	 * @return The cooldown manager.
+	 */
+	public CooldownListenerSource getCooldownManager() {
+		return cooldownManager;
+	}
+	
+	/**
+	 * Retrieve the number of seconds left before a state change is possible or automatic.
+	 * <ul>
+     *   <li>If the player is currently not sneaking, this is the amount of time left until a 
+     *       player may toggle its sneaking status.</li>
+     *   <li>If not, this is the time until a toggle will be forced.</li>
+     * </ul>
+     * Note that this may be negative if we've exceeded the cooldown.
+	 * @param player - the player whose information we're looking for.
+	 * @return Number of seconds left, or NULL if no cooldown is defined.
+	 */
+	public Double getCooldown(Player player) {
+		Long current = System.currentTimeMillis();
+		Long cooldown = sneakers.getCooldown(player);
+		
+		if (cooldown != null) {
+			return (cooldown - current) / 1000.0;
+		} else {
+			return null;
+		}
+	}
+	
+	/**
+	 * Toggle the sneaking of a given player.
+	 * <p>
+	 * This disregards any permission or cooldowns that may be active.
+	 * 
+	 * @param target - the player whose sneaking will be toggled.
+	 * @return
+	 * @throws InvocationTargetException If we are unable to notify sourrounding player's of this change.
+	 */
+	public boolean toggleSneaking(@Nonnull Player target) throws InvocationTargetException {
+		if (target == null)
+			throw new IllegalArgumentException("target cannot be NULL.");
+		
 		// Toggle sneaking
 		boolean status = sneakers.toggleAutoSneaking(target);
-
-		// Get the message to transmit
-		String message = ChatColor.GOLD + config.getFormattedMessage(status, target.getName());
 
 		// We may need to refresh the player
 		listener.updatePlayer(manager, target);
@@ -182,12 +306,6 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 			// Remove it
 			sneakers.setCooldown(target, null);
 		}
-		
-		if (target == sender) {
-			sender.sendMessage(message);
-		} else {
-			sender.sendMessage(message);
-			target.sendMessage(message);
-		}
+		return status;
 	}
 }
