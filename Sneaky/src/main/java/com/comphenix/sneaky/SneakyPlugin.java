@@ -137,7 +137,7 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 						String message = getCooldownMessage(player);
 						
 						// Inform about the cooldown
-						if (message != null) {
+						if (message != null && message.length() > 0) {
 							player.sendMessage(ChatColor.RED + message);
 						}
 					}

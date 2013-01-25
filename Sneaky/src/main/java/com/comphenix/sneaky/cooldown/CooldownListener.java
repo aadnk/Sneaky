@@ -2,11 +2,16 @@ package com.comphenix.sneaky.cooldown;
 
 import java.util.EventListener;
 
+/**
+ * Represents a listener that can recieve cooldown expire and changed events.
+ * 
+ * @author Kristian
+ */
 public interface CooldownListener extends EventListener {
 	/**
 	 * Invoked when the cooldown of a player has expired.
 	 * <p>
-	 * This event is optional.
+	 * Note: This event is optional.
 	 * @param event - the player whose cooldown has expired.
 	 */
 	public void cooldownExpired(CooldownExpiredEvent event);

@@ -1,5 +1,10 @@
 package com.comphenix.sneaky.cooldown;
 
+/**
+ * Represents an object that can register cooldown listeners.
+ * 
+ * @author Kristian
+ */
 public interface CooldownListenerSource {
 	/**
 	 * Add a given listener to this event source.
