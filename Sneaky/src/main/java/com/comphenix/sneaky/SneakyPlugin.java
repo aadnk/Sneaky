@@ -195,9 +195,18 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 
 	@EventHandler
 	public void onPlayerJoin(PlayerJoinEvent event) {
+		Player player = event.getPlayer();
+		
 		// Inform a player about the automatic sneaking
 		if (sneakers.isAutoSneaking(event.getPlayer())) {
-			event.getPlayer().sendMessage(ChatColor.GOLD + config.getFormattedMessage(true, event.getPlayer().getName()));
+			player.sendMessage(ChatColor.GOLD + config.getFormattedMessage(true, event.getPlayer().getName()));
+		} else {
+			// Or about any relevant cooldowns
+			String cooldown = getCooldownMessage(player);
+			
+			if (cooldown != null) {
+				player.sendMessage(ChatColor.RED + cooldown);
+			}
 		}
 	}
 	
@@ -359,12 +368,12 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 		}
 		// Use default if Vault failed
 		if (delta < -0.5) {
-			delta = (status ? config.getDuration() : config.getCooldown()) * 1000.0;
+			delta = (status ? config.getDuration() : config.getCooldown());
 		}
 		
 		// Save cooldown
 		if (delta > 0) {
-			sneakers.setCooldown(target, System.currentTimeMillis() + (long)delta);
+			sneakers.setCooldown(target, System.currentTimeMillis() + (long)(delta * 1000));
 		} else {
 			// Remove it
 			sneakers.setCooldown(target, null);
