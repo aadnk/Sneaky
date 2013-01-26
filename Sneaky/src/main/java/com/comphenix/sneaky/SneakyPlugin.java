@@ -120,6 +120,15 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 		}
 	}
 	
+	/**
+	 * Send a given message to the given player by translating ampersand to Minecraft color codes.
+	 * @param sender - the receiever.
+	 * @param message  - the message to send.
+	 */
+	private void sendColoredMessage(CommandSender sender, String message) {
+		sender.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
+	}
+	
 	private void registerCooldownListener() {
 		cooldownListener = new CooldownListener() {
 			@Override
@@ -138,7 +147,7 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 						}
 					} else {
 						// Inform about this opportunity
-						player.sendMessage(config.getCooldownExpiredMessage());
+						sendColoredMessage(player, config.getCooldownExpiredMessage());
 						
 						// Remove the cooldown completely
 						sneakers.setCooldown(player, null);
@@ -156,7 +165,7 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 						
 						// Inform about the cooldown
 						if (message != null && message.length() > 0) {
-							player.sendMessage(ChatColor.RED + message);
+							sendColoredMessage(player, ChatColor.RED + message);
 						}
 					}
 				}
@@ -199,13 +208,13 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 		
 		// Inform a player about the automatic sneaking
 		if (sneakers.isAutoSneaking(event.getPlayer())) {
-			player.sendMessage(ChatColor.GOLD + config.getFormattedMessage(true, event.getPlayer().getName()));
+			sendColoredMessage(player, ChatColor.GOLD + config.getFormattedMessage(true, event.getPlayer().getName()));
 		} else {
 			// Or about any relevant cooldowns
 			String cooldown = getCooldownMessage(player);
 			
 			if (cooldown != null) {
-				player.sendMessage(ChatColor.RED + cooldown);
+				sendColoredMessage(player, ChatColor.RED + cooldown);
 			}
 		}
 	}
@@ -217,7 +226,7 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 			String error = processSneak(sender, args);
 			
 			if (error != null) {
-				sender.sendMessage(ChatColor.RED + error);
+				sendColoredMessage(sender, ChatColor.RED + error);
 			}
 			return true;
 		}
@@ -261,7 +270,7 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 			try {
 				// Don't toggle if we are in a valid state
 				if (parseBoolean(args[1]) == sneaking) {
-					sender.sendMessage("Sneaking is already " + args[1]);
+					sendColoredMessage(sender, "Sneaking is already " + args[1]);
 					return null;
 				}
 				
@@ -292,10 +301,10 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 			
 			// Notify player and sender
 			if (target == sender) {
-				sender.sendMessage(message);
+				sendColoredMessage(sender, message);
 			} else {
-				sender.sendMessage(message);
-				target.sendMessage(message);
+				sendColoredMessage(sender, message);
+				sendColoredMessage(target, message);
 			}
 			
 		} catch (InvocationTargetException e) {
