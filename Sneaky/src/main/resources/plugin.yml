@@ -21,7 +21,7 @@ permissions:
       sneaky.sneak.other: true
   sneaky.sneak.self:
     description: Toggle automatic sneaking of your own player.
-    default: true
+    default: op
   sneaky.sneak.other:
     description: Toggle automatic sneaking of other players.
     default: op
