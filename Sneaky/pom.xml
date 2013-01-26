@@ -4,7 +4,7 @@
 	<groupId>com.comphenix.sneaky</groupId>
 	<artifactId>Sneaky</artifactId>
 	<packaging>jar</packaging>
-	<version>1.0.0</version>
+	<version>1.0.1-SNAPSHOT</version>
 	<name>Sneaky</name>
 	<url>http://maven.apache.org</url>
 	
