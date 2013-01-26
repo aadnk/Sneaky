@@ -17,6 +17,7 @@ package com.comphenix.sneaky;
  *  02111-1307 USA
  */
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
@@ -82,8 +83,8 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 		// Load configuration
 		ConfigurationSerialization.registerClass(AutoSneakers.class);
 		config = new TypedConfiguration(getConfig());
-		
-		if (!config.isCreated()) {
+
+		if (!hasConfig()) {
 			getConfig().options().copyDefaults(true);
 			saveConfig();
 			
@@ -118,6 +119,15 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 			// Damn it
 			e.printStackTrace();
 		}
+	}
+	
+	/**
+	 * Determine if a configuration file has been created.
+	 * @return TRUE if it has, FALSE otherwise.
+	 */
+	private boolean hasConfig() {
+		File file = new File(getDataFolder(), "config.yml");
+		return file.exists();
 	}
 	
 	/**

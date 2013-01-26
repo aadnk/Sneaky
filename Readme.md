@@ -49,7 +49,7 @@ Permissions
   <tr>
     <td>sneaky.sneak.self</th>
     <td>Toggle automatic sneaking for your own player.</td>
-    <td>true</td>
+    <td>false</td>
   </tr>
   <tr>
     <td>sneaky.sneak.other</td>
