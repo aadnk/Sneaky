@@ -1,6 +1,6 @@
 name: Sneaky
 main: com.comphenix.sneaky.SneakyPlugin
-version: 1.0.0-SNAPSHOT
+version: 1.0.1
 description: A simple plugin that allows players to toggle automatic sneaking.
 website: http://www.comphenix.net/Sneaky
 dev-url: http://dev.bukkit.org/server-mods/sneaky/
