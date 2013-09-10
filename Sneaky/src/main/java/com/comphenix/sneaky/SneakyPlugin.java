@@ -33,6 +33,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -42,6 +43,7 @@ import com.comphenix.sneaky.cooldown.CooldownChangedEvent;
 import com.comphenix.sneaky.cooldown.CooldownExpiredEvent;
 import com.comphenix.sneaky.cooldown.CooldownListener;
 import com.comphenix.sneaky.cooldown.CooldownListenerSource;
+import com.comphenix.sneaky.features.PlayerTorchBreaker;
 import com.comphenix.sneaky.metrics.MetricsLite;
 
 public class SneakyPlugin extends JavaPlugin implements Listener {
@@ -63,6 +65,9 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 	private AutoSneakers sneakers;
 	private CooldownManager cooldownManager;
 	private CooldownListener cooldownListener;
+	
+	// Special features
+	private PlayerTorchBreaker torchBreaker;
 	
 	// Minecraft packet handling
 	private SneakPacketListener listener;
@@ -105,11 +110,16 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 		// Packet handling
 		manager = ProtocolLibrary.getProtocolManager();
 		listener = new SneakPacketListener(this, sneakers);
+		
+		// Features
+		torchBreaker = new PlayerTorchBreaker(this);
 
-		// Register listeners
+		// Register cooldown
 		manager.addPacketListener(listener);
 		cooldownManager.registerBukkit(getServer());
-		getServer().getPluginManager().registerEvents(this, this);
+		
+		// Register listeners
+		registerListeners(this, torchBreaker);
 		
 		// Load metrics
 		try {
@@ -119,6 +129,17 @@ public class SneakyPlugin extends JavaPlugin implements Listener {
 			// Damn it
 			e.printStackTrace();
 		}
+	}
+	
+	/**
+	 * Register a given array of listeners.
+	 * @param listeners - array of listeners.
+	 */
+	private void registerListeners(Listener... listeners) {
+		PluginManager manager = getServer().getPluginManager();
+		
+		for (Listener listener : listeners)
+			manager.registerEvents(listener, this);
 	}
 	
 	/**
